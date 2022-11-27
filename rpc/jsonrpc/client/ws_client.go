@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	metrics "github.com/rcrowley/go-metrics"
+	"github.com/rcrowley/go-metrics"
 
 	"github.com/tendermint/tendermint/libs/log"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/libs/service"
 	tmsync "github.com/tendermint/tendermint/libs/sync"
-	types "github.com/tendermint/tendermint/rpc/jsonrpc/types"
+	"github.com/tendermint/tendermint/rpc/jsonrpc/types"
 )
 
 const (
@@ -30,7 +30,7 @@ const (
 // the remote server.
 //
 // WSClient is safe for concurrent use by multiple goroutines.
-type WSClient struct { //nolint: maligned
+type WSClient struct { // nolint: maligned
 	conn *websocket.Conn
 
 	Address  string // IP:PORT or /path/to/socket
@@ -89,8 +89,11 @@ func NewWS(remoteAddr, endpoint string, options ...func(*WSClient)) (*WSClient, 
 	if err != nil {
 		return nil, err
 	}
-	// default to ws protocol, unless wss is explicitly specified
-	if parsedURL.Scheme != protoWSS {
+
+	// default to ws protocol, unless wss or https is specified
+	if parsedURL.Scheme == protoHTTPS {
+		parsedURL.Scheme = protoWSS
+	} else if parsedURL.Scheme != protoWSS {
 		parsedURL.Scheme = protoWS
 	}
 
